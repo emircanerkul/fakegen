@@ -1,0 +1,37 @@
+{
+  "name": "fakegen",
+  "version": "1.0.0",
+  "description": "A CLI tool to generate fake data and images using faker and lightweight image generation",
+  "main": "src/index.js",
+  "bin": {
+    "fakegen": "./bin/fakegen.js"
+  },
+  "exports": {
+    "./config": "./src/config/index.js",
+    "./data": "./src/data/index.js",
+    "./image": "./src/image/index.js",
+    "./utils": "./src/utils/index.js",
+    "./generator": "./src/generator.js"
+  },
+  "scripts": {
+    "start": "node bin/fakegen.js"
+  },
+  "keywords": [
+    "fake",
+    "data",
+    "generator",
+    "faker",
+    "cli",
+    "npx"
+  ],
+  "author": "Emircan ERKUL <opensource@emircanerkul.com> (https://emircanerkul.com)",
+  "license": "GPL-3.0",
+  "dependencies": {
+    "@faker-js/faker": "^8.0.0",
+    "@taplo/lib": "^0.5.0",
+    "canvas": "^2.11.2",
+    "commander": "^11.0.0",
+    "fs-extra": "^11.1.1",
+    "js-yaml": "^4.1.0"
+  }
+}
