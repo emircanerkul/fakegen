@@ -1,15 +1,80 @@
 const { faker } = require('@faker-js/faker');
+const crypto = require('crypto');
+
+// Counter state management using closures instead of global variables
+const counterState = {
+  ascCounter: 1,
+  descCounter: 1000
+};
+
+/**
+ * Get next ascending number
+ * @returns {number} Next ascending number
+ */
+function getNextAscNumber() {
+  return counterState.ascCounter++;
+}
+
+/**
+ * Get next descending number
+ * @returns {number} Next descending number
+ */
+function getNextDescNumber() {
+  return counterState.descCounter--;
+}
+
+/**
+ * Reset counters to initial state
+ */
+function resetCounters() {
+  counterState.ascCounter = 1;
+  counterState.descCounter = 1000;
+}
+
+/**
+ * Validate field configuration
+ * @param {Object} fieldConfig - Field configuration to validate
+ * @throws {Error} If configuration is invalid
+ */
+function validateFieldConfig(fieldConfig = {}) {
+  if (fieldConfig.count !== undefined && (typeof fieldConfig.count !== 'number' || fieldConfig.count < 1)) {
+    throw new Error('Field count must be a positive number');
+  }
+
+  if (fieldConfig.fields !== undefined && !Array.isArray(fieldConfig.fields)) {
+    throw new Error('Fields must be an array');
+  }
+}
 
 /**
  * Generate fake data based on field type
  * @param {string} type - Field type
  * @param {Object} fieldConfig - Field configuration (for nested types)
  * @returns {any} Generated fake data
+ * @throws {Error} If type is unknown or configuration is invalid
  */
 function generateFakeDataForField(type, fieldConfig = {}) {
+  validateFieldConfig(fieldConfig);
+
   switch (type) {
     case 'number':
       return faker.number.int({ min: 1, max: 1000 });
+    case 'numberAsc':
+      return getNextAscNumber();
+    case 'numberDesc':
+      return getNextDescNumber();
+    case 'numberRandom':
+      return faker.number.int({ min: 1, max: 10000 });
+    case 'sha1':
+      return crypto.createHash('sha1').update(faker.lorem.word()).digest('hex');
+    case 'sha256':
+      return crypto.createHash('sha256').update(faker.lorem.sentence()).digest('hex');
+    case 'md5':
+      return crypto.createHash('md5').update(faker.internet.email()).digest('hex');
+    case 'uuid':
+      return faker.string.uuid();
+    case 'uuid4':
+      return crypto.randomUUID();
     case 'firstName':
       return faker.person.firstName();
     case 'lastName':
@@ -76,28 +141,36 @@ function generateFakeDataForField(type, fieldConfig = {}) {
         array.push(generateFakeDataForField(itemType));
       }
       return array;
-    case 'numberAsc':
-      // Ascending numbers
-      if (!global.ascCounter) global.ascCounter = 1;
-      return global.ascCounter++;
-    case 'numberDesc':
-      // Descending numbers
-      if (!global.descCounter) global.descCounter = 1000;
-      return global.descCounter--;
-    case 'numberRandom':
-      return faker.number.int({ min: 1, max: 10000 });
-    case 'sha1':
-      return crypto.createHash('sha1').update(faker.lorem.word()).digest('hex');
-    case 'sha256':
-      return crypto.createHash('sha256').update(faker.lorem.sentence()).digest('hex');
-    case 'md5':
-      return crypto.createHash('md5').update(faker.internet.email()).digest('hex');
-    case 'uuid':
-      return faker.string.uuid();
-    case 'uuid4':
-      return crypto.randomUUID();
     default:
+      // For unknown types, try to use faker directly or return a default word
+      try {
+        if (faker[type]) {
+          return faker[type]();
+        }
+      } catch (error) {
+        console.warn(`Unknown field type: ${type}, using default value`);
+      }
       return faker.lorem.word();
+  }
+}
+
+/**
+ * Validate type configuration
+ * @param {Object} typeConfig - Configuration for the data type
+ * @param {number} count - Number of records to generate
+ * @throws {Error} If configuration is invalid
+ */
+function validateTypeConfig(typeConfig, count) {
+  if (!typeConfig) {
+    throw new Error('Type configuration is required');
+  }
+
+  if (!typeConfig.fields || !Array.isArray(typeConfig.fields)) {
+    throw new Error('Type configuration must have a fields array');
+  }
+
+  if (typeof count !== 'number' || count < 1) {
+    throw new Error('Count must be a positive number');
   }
 }
 
@@ -106,13 +179,21 @@ function generateFakeDataForField(type, fieldConfig = {}) {
  * @param {Object} typeConfig - Configuration for the data type
  * @param {number} count - Number of records to generate
  * @returns {Array<Object>} Generated data array
+ * @throws {Error} If configuration is invalid
  */
 function generateDataForType(typeConfig, count) {
+  validateTypeConfig(typeConfig, count);
+
   const data = [];
   for (let i = 0; i < count; i++) {
     const item = {};
     typeConfig.fields.forEach(field => {
-      item[field.name] = generateFakeDataForField(field.type, field);
+      try {
+        item[field.name] = generateFakeDataForField(field.type, field);
+      } catch (error) {
+        console.error(`Error generating field ${field.name}:`, error.message);
+        item[field.name] = null; // Set null for failed fields
+      }
     });
     data.push(item);
   }
@@ -121,5 +202,8 @@ function generateDataForType(typeConfig, count) {
 
 module.exports = {
   generateFakeDataForField,
-  generateDataForType
+  generateDataForType,
+  resetCounters,
+  getNextAscNumber,
+  getNextDescNumber
 };

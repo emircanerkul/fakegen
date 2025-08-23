@@ -3,14 +3,24 @@
 A powerful CLI tool to generate comprehensive fake data and beautiful abstract images using faker and canvas. Perfect for testing, prototyping, and development purposes.
 
 > **DISCLAIMER:** This project developed with roocode/sonic to solve our annoying problem and demonstrate how well AI models do with good prompting. All prompt history also included, %100 transparent and honest.
-> - [Initial promt](history/roo_task_aug-22-2025_7-48-26-am.md)
+> 1. [Initial promt](history/roo_task_aug-22-2025_7-48-26-am.md)
+> 2. [Initial promt](history/roo_task_aug-23-2025_7-59-27-am.md)
+> 3. [Initial promt](history/roo_task_aug-23-2025_8-35-56-am.md)
+> 4. [Initial promt](history/roo_task_aug-23-2025_8-40-46-am.md)
 
 ## Features
 
 - **6 Data Formats**: Generate data in JSON, CSV, TXT, YML, TOML, and XML formats
-- **4 Data Types**: Users, Products, Orders, and BlogPosts with complex nested structures
+- **5 Data Types**: Users, Products, Orders, BlogPosts, and Numbers with complex nested structures
 - **Beautiful Abstract Art**: Generate stunning pastel abstract images with organic shapes and flowing patterns
+- **Checkerboard Patterns**: Create colorful checkerboard images with alternating pastel colors
+- **4 Image Formats**: Support for JPG, PNG, WebP, and ICO formats
 - **15+ Image Sizes**: From 1x1 to 2560x2560 pixels with 7 aspect ratios
+- **Favicon Generation**: Generate favicons in multiple sizes (16x16 to 4096x4096) with PNG and ICO formats
+- **Programming Code Examples**: Generate example code files for 17+ programming languages
+- **Video Generation**: Create 3-second videos with moving pastel balls in 6 formats (mp4, mov, mkv, mpg, mpeg, flv)
+- **Audio Generation**: Generate 10-second synthesized audio files in 5 formats (mp3, ogg, wav, webm, aac)
+- **Advanced Data Types**: Numbers (ascending/descending), random numbers, SHA keys, UUIDs, and more
 - **Advanced Data Structures**: Support for nested objects, arrays, and nested arrays
 - **Configuration-Driven**: Use `.fakegen.yml` configuration file for easy customization
 - **CLI Interface**: Simple command-line interface with comprehensive options
@@ -27,6 +37,26 @@ npx fakegen
 ```bash
 npm install -g .
 ```
+
+### Optional Dependencies (for Video & Audio Generation)
+
+To enable video and audio generation features, install the optional dependencies:
+
+```bash
+npm install fluent-ffmpeg @ffmpeg-installer/ffmpeg audiobuffer-to-wav node-lame wav-encoder ogg
+```
+
+These dependencies are large and only needed if you want to generate videos and audio files.
+
+#### For npx Usage
+
+When using `npx fakegen`, the optional dependencies are not available by default. To use video/audio features:
+
+1. **Install globally**: `npm install -g fluent-ffmpeg @ffmpeg-installer/ffmpeg`
+2. **Or use local installation**: Install dependencies in your project directory
+3. **Or enable in config**: Set `videos.enabled: true` or `audio.enabled: true` and the tool will show installation instructions
+
+The tool will gracefully skip video/audio generation if dependencies are not available.
 
 ## Usage
 
@@ -226,6 +256,25 @@ data:
           type: array
           count: 4
           itemType: text
+      numbers:
+        enabled: true
+        fields:
+          - name: id
+            type: numberAsc
+          - name: randomNumber
+            type: numberRandom
+          - name: descendingNumber
+            type: numberDesc
+          - name: sha1
+            type: sha1
+          - name: sha256
+            type: sha256
+          - name: md5
+            type: md5
+          - name: uuid
+            type: uuid
+          - name: uuid4
+            type: uuid4
 
 images:
   enabled: true
@@ -259,6 +308,33 @@ images:
     - 2048
     - 2560
   generateSizes: true
+  },
+  favicons: {
+    enabled: true
+    sizes: [16, 32, 48, 64, 128, 256, 512, 1024, 2048, 4096]
+    formats: ['png', 'ico']
+  },
+  programmingCodes: {
+    enabled: true
+    languages: ['cs', 'ps', 'php', 'js', 'ts', 'tsx', 'py', 'java', 'cpp', 'c', 'rb', 'go', 'rs', 'swift', 'kt', 'scala', 'dart']
+    count: 5
+  },
+  videos: {
+    enabled: false
+    count: 5
+    duration: 3
+    width: 640
+    height: 480
+    formats: ['mp4', 'mov', 'mkv', 'mpg', 'mpeg', 'flv']
+    fps: 30
+  },
+  audio: {
+    enabled: false
+    count: 5
+    duration: 10
+    sampleRate: 44100
+    formats: ['mp3', 'ogg', 'wav', 'webm', 'aac']
+  }
 ```
 
 ### Supported Field Types
@@ -287,6 +363,16 @@ images:
 - `nested`: Creates a nested object with sub-fields
 - `array`: Creates an array of items with specified count and itemType
 - `nestedArray`: Creates an array of nested objects with specified fields
+
+#### Cryptographic & Number Types
+- `numberAsc`: Ascending numbers (1, 2, 3, ...)
+- `numberDesc`: Descending numbers (1000, 999, 998, ...)
+- `numberRandom`: Random numbers (1-10000)
+- `sha1`: SHA-1 hash
+- `sha256`: SHA-256 hash
+- `md5`: MD5 hash
+- `uuid`: UUID v4 string
+- `uuid4`: Cryptographically secure UUID
 
 #### Nested Structure Examples
 ```yaml
@@ -389,6 +475,34 @@ fakegen/
         ├── abstract_1_2560x2560_1:1.webp
         ├── abstract_2_1920x1080_16:9.webp
         └── ...
+├── favicons/
+│   ├── png/
+│   │   ├── favicon_16x16.png
+│   │   ├── favicon_32x32.png
+│   │   ├── favicon_64x64.png
+│   │   └── ...
+│   └── ico/
+│       ├── favicon_16x16.ico
+│       ├── favicon_32x32.ico
+│       ├── favicon_64x64.ico
+│       └── ...
+├── programming-code/
+│   ├── hello_1.js
+│   ├── hello_2.py
+│   ├── hello_3.java
+│   ├── hello_1.cs
+│   ├── hello_2.php
+│   └── ...
+├── video/ (optional - requires FFmpeg dependencies)
+│   ├── animation_1.mp4
+│   ├── animation_1.mov
+│   ├── animation_1.mkv
+│   └── ...
+└── audio/ (optional - requires audio dependencies)
+    ├── synthesized_1.wav
+    ├── synthesized_1.mp3
+    ├── synthesized_1.ogg
+    └── ...
 ```
 
 ### Image Naming Convention
@@ -402,10 +516,17 @@ Images are named using the format: `abstract_{number}_{width}x{height}_{aspectRa
 
 ### Generated Content
 
-- **36 Data Files**: 4 data types × 6 formats = 24 files + 12 images
+- **42 Data Files**: 5 data types × 6 formats = 30 files + 15 images
 - **Beautiful Abstract Images**: Pastel colors, organic shapes, flowing patterns
+- **Favicon Set**: 10 different sizes in PNG and ICO formats
+- **Programming Code Examples**: 17+ languages with example "Hello World" files
+- **Video Generation**: 3-second animations with moving pastel balls (optional)
+- **Audio Generation**: 10-second synthesized audio files (optional)
 - **Complex Nested Data**: Multi-level structures with realistic relationships
-- **Multiple Image Formats**: JPG, PNG, and WebP support
+- **Multiple Image Formats**: JPG, PNG, WebP, and ICO support
+- **Multiple Video Formats**: mp4, mov, mkv, mpg, mpeg, flv support
+- **Multiple Audio Formats**: mp3, ogg, wav, webm, aac support
+- **Advanced Data Types**: Numbers, hashes, UUIDs, and cryptographic functions
 
 ## Examples
 
@@ -512,6 +633,15 @@ npx fakegen init
 - `fs-extra`: For enhanced file system operations
 - `crypto`: For generating unique identifiers and hashes
 
+### Optional Dependencies (for Video & Audio)
+
+- `fluent-ffmpeg`: For video generation and processing
+- `@ffmpeg-installer/ffmpeg`: FFmpeg binary for video operations
+- `audiobuffer-to-wav`: For WAV audio file generation
+- `node-lame`: For MP3 audio encoding
+- `wav-encoder`: For WAV file encoding
+- `ogg`: For OGG audio format support
+
 ## Development
 
 The project uses a modular architecture with the following structure:
@@ -525,7 +655,12 @@ src/
 │   └── formatters.js     # Multi-format serialization
 ├── image/
 │   ├── generator.js      # Abstract image generation
-│   └── saver.js          # Image export and format handling
+│   ├── saver.js          # Image export and format handling
+│   ├── index.js          # Image module exports
+│   └── faviconGenerator.js # Favicon generation
+├── utils/
+│   ├── codeGenerator.js  # Programming code examples generation
+│   └── index.js          # Utils module exports
 └── generator.js          # Main orchestration logic
 
 bin/
@@ -570,9 +705,17 @@ node src/image/generator.js
 
 ### Recent Fixes
 - ✅ **Size Calculation**: Fixed "Max < Min" errors in image generation
-- ✅ **WebP Compatibility**: Removed problematic format from defaults
+- ✅ **WebP Compatibility**: Added WebP format support with quality optimization
 - ✅ **Nested Data**: Proper serialization across all formats
 - ✅ **Small Images**: Support for 1x1 pixel and tiny dimensions
+
+### Version 3.0 New Features
+- ✅ **5 Data Types**: Added Numbers type with cryptographic functions
+- ✅ **Advanced Data Types**: SHA keys, UUIDs, ascending/descending numbers
+- ✅ **Favicon Generation**: 10 different sizes with PNG and ICO formats
+- ✅ **Programming Code Examples**: 17+ languages with example files
+- ✅ **Enhanced Image Support**: WebP format with quality optimization
+- ✅ **Modular Architecture**: New favicon and code generation modules
 
 ## License
 
