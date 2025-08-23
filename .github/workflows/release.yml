@@ -31,7 +31,7 @@ jobs:
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
-          scope: '@your-scope' # Remove this line if not using scoped packages
+          scope: '@emircanerkul'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           
@@ -150,7 +150,7 @@ jobs:
       - name: Dry Run NPM Publish
         run: |
           echo "🧪 Testing NPM publish (dry run)..."
-          npm publish --dry-run
+          npm publish --dry-run --access public
           echo "✅ Dry run completed successfully"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -263,7 +263,7 @@ jobs:
             
             ### 📦 Installation
             ```bash
-            npm install -g fakegen@${{ github.event.inputs.version }}
+            npm install -g @emircanerkul/fakegen@${{ github.event.inputs.version }}
             ```
             
             ### 🧪 Testing

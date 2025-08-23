@@ -2,6 +2,10 @@
 
 A powerful CLI tool to generate comprehensive fake data and beautiful abstract images using faker and canvas. Perfect for testing, prototyping, and development purposes.
 
+### Quick Start
+
+```npx @emircanerkul/fakegen``` or [See the artifacts of the Github Actions to Download](https://github.com/emircanerkul/fakegen/actions/runs/17174640006)
+
 > **DISCLAIMER:** This project developed with roocode/sonic to solve our annoying problem and demonstrate how well AI models do with good prompting. All prompt history also included, %100 transparent and honest.
 > 1. [Initial promt](history/roo_task_aug-22-2025_7-48-26-am.md)
 > 2. [Initial promt](history/roo_task_aug-23-2025_7-59-27-am.md)
@@ -66,7 +70,7 @@ fake-data/
 
 ### Using npx (Recommended)
 ```bash
-npx fakegen
+npx @emircanerkul/fakegen
 ```
 
 ### Local Installation
@@ -81,19 +85,19 @@ npm install -g .
 ### Quick Start
 ```bash
 # Initialize configuration file
-npx fakegen init
+npx @emircanerkul/fakegen init
 
 # Generate everything with default configuration
-npx fakegen
+npx @emircanerkul/fakegen
 
 # Generate with custom options
-npx fakegen -n 50 -o ./my-data
+npx @emircanerkul/fakegen -n 50 -o ./my-data
 
 # Generate only data (skip images)
-npx fakegen --no-images
+npx @emircanerkul/fakegen --no-images
 
 # Generate only images (skip data)
-npx fakegen --images-only
+npx @emircanerkul/fakegen --images-only
 ```
 
 ### CLI Options
@@ -605,22 +609,22 @@ f4e5d6c7b8a9123...
 ### Basic Usage
 ```bash
 # Generate everything with default settings
-npx fakegen
+npx @emircanerkul/fakegen
 
 # Generate with custom count
-npx fakegen -n 50
+npx @emircanerkul/fakegen -n 50
 
 # Generate to custom directory
-npx fakegen -o ./my-test-data
+npx @emircanerkul/fakegen -o ./my-test-data
 
 # Use custom configuration file
-npx fakegen -c ./custom-config.yml
+npx @emircanerkul/fakegen -c ./custom-config.yml
 ```
 
 ### Configuration Examples
 ```bash
 # Initialize default configuration
-npx fakegen init
+npx @emircanerkul/fakegen init
 
 # Edit .fakegen.yml to customize:
 # - Enable/disable specific data types
