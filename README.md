@@ -11,20 +11,52 @@ A powerful CLI tool to generate comprehensive fake data and beautiful abstract i
 ## Features
 
 - **6 Data Formats**: Generate data in JSON, CSV, TXT, YML, TOML, and XML formats
-- **5 Data Types**: Users, Products, Orders, BlogPosts, and Numbers with complex nested structures
+- **Multiple Data Types**: User profiles, product catalogs, order history, blog posts, and simple data sequences
+- **Simple Data Types**: Numbers, hashes, UUIDs, and dates with clean, minimal formatting (values only)
+- **Complex Data Types**: Full record structures with nested objects and arrays
 - **Beautiful Abstract Art**: Generate stunning pastel abstract images with organic shapes and flowing patterns
-- **Checkerboard Patterns**: Create colorful checkerboard images with alternating pastel colors
-- **4 Image Formats**: Support for JPG, PNG, WebP, and ICO formats
-- **15+ Image Sizes**: From 1x1 to 2560x2560 pixels with 7 aspect ratios
-- **Favicon Generation**: Generate favicons in multiple sizes (16x16 to 4096x4096) with PNG and ICO formats
+- **Checkerboard Patterns**: Create colorful checkerboard images with alternating colors
+- **3 Image Formats**: Support for JPG, PNG, and WebP formats
+- **Standard Aspect Ratios**: Industry-standard ratios (1:1, 4:3, 16:9, 21:9, 9:16) with organized output
+- **Favicon Generation**: Generate favicons in multiple sizes (16x16 to 512x512) with PNG and ICO formats
 - **Programming Code Examples**: Generate example code files for 17+ programming languages
-- **Video Generation**: Create 3-second videos with moving pastel balls in 6 formats (mp4, mov, mkv, mpg, mpeg, flv)
-- **Audio Generation**: Generate 10-second synthesized audio files in 5 formats (mp3, ogg, wav, webm, aac)
-- **Advanced Data Types**: Numbers (ascending/descending), random numbers, SHA keys, UUIDs, and more
-- **Advanced Data Structures**: Support for nested objects, arrays, and nested arrays
+- **Kebab-Case Organization**: Clean, organized directory structure using kebab-case naming
 - **Configuration-Driven**: Use `.fakegen.yml` configuration file for easy customization
 - **CLI Interface**: Simple command-line interface with comprehensive options
 - **npx Ready**: Can be run via `npx` without installation
+
+### Directory Structure
+
+Generated content is organized in a clean, predictable structure:
+
+```
+fake-data/
+├── data/
+│   ├── user-profiles/          # User data with nested profiles
+│   ├── product-catalog/        # E-commerce product data
+│   ├── order-history/          # Order transactions
+│   ├── blog-posts/             # Blog content with SEO
+│   ├── simple-numbers/         # Just numbers (11, 12, 13...)
+│   ├── crypto-hashes/          # Hash values only
+│   └── uuid-sequences/         # UUID values only
+├── images/
+│   ├── 1-1/                    # Square images (1:1)
+│   │   ├── abstract/
+│   │   └── checkerboard/
+│   ├── 16-9/                   # Widescreen images (16:9)
+│   │   ├── abstract/
+│   │   └── checkerboard/
+│   └── 21-9/                   # Ultra-wide images (21:9)
+│       ├── abstract/
+│       └── checkerboard/
+├── favicons/
+│   ├── png/
+│   └── ico/
+└── programming-examples/
+    ├── hello_1.js
+    ├── hello_2.py
+    └── ...
+```
 
 ## Installation
 
@@ -38,25 +70,7 @@ npx fakegen
 npm install -g .
 ```
 
-### Optional Dependencies (for Video & Audio Generation)
-
-To enable video and audio generation features, install the optional dependencies:
-
-```bash
-npm install fluent-ffmpeg @ffmpeg-installer/ffmpeg audiobuffer-to-wav node-lame wav-encoder ogg
-```
-
-These dependencies are large and only needed if you want to generate videos and audio files.
-
-#### For npx Usage
-
-When using `npx fakegen`, the optional dependencies are not available by default. To use video/audio features:
-
-1. **Install globally**: `npm install -g fluent-ffmpeg @ffmpeg-installer/ffmpeg`
-2. **Or use local installation**: Install dependencies in your project directory
-3. **Or enable in config**: Set `videos.enabled: true` or `audio.enabled: true` and the tool will show installation instructions
-
-The tool will gracefully skip video/audio generation if dependencies are not available.
+**Note**: Video and audio generation features are disabled by default and require additional dependencies. The core functionality (data generation, images, favicons, programming codes) works out of the box.
 
 ## Usage
 
@@ -81,7 +95,7 @@ npx fakegen --images-only
 ### CLI Options
 
 - `-c, --config <path>`: Path to config file (default: `.fakegen.yml`)
-- `-o, --output <directory>`: Output directory (default: `./fakegen`)
+- `-o, --output <directory>`: Output directory (default: `./fake-data`)
 - `-n, --count <number>`: Number of records to generate (default: `10`)
 - `--help`: Show help information
 - `--version`: Show version number
@@ -93,11 +107,11 @@ npx fakegen --images-only
 
 ## Configuration
 
-The tool uses a `.fakegen.yml` configuration file to define what data to generate. Here's the full structure with all features:
+The tool uses a `.fakegen.yml` configuration file to define what data to generate. Here's the structure with kebab-case naming:
 
 ```yaml
 output:
-  directory: ./fakegen
+  directory: ./fake-data
   formats:
     - json
     - csv
@@ -109,95 +123,129 @@ output:
 data:
   count: 10
   types:
-    users:
+    user-profiles:
       enabled: true
       fields:
-        - name: id
-          type: number
-        - name: firstName
-          type: firstName
-        - name: lastName
-          type: lastName
-        - name: email
+        - name: user-id
+          type: number-ascending
+        - name: first-name
+          type: first-name
+        - name: last-name
+          type: last-name
+        - name: email-address
           type: email
-        - name: phone
-          type: phoneNumber
-        - name: address
+        - name: phone-number
+          type: phone-number
+        - name: street-address
           type: address
-        - name: company
-          type: companyName
-        - name: profile
+        - name: company-name
+          type: company-name
+        - name: user-profile
           type: nested
           fields:
-            - name: bio
+            - name: bio-text
               type: paragraph
-            - name: avatar
+            - name: avatar-url
               type: text
-            - name: socialLinks
-              type: nestedArray
+            - name: social-links
+              type: nested-array
               count: 3
               fields:
-                - name: platform
+                - name: platform-name
                   type: text
-                - name: url
+                - name: profile-url
                   type: text
-    products:
+    product-catalog:
       enabled: true
       fields:
-        - name: id
-          type: number
-        - name: name
-          type: productName
-        - name: description
-          type: productDescription
-        - name: price
+        - name: product-id
+          type: number-ascending
+        - name: product-name
+          type: product-name
+        - name: product-description
+          type: product-description
+        - name: unit-price
           type: price
-        - name: category
-          type: productCategory
-        - name: inStock
+        - name: product-category
+          type: product-category
+        - name: in-stock
           type: boolean
-        - name: specifications
+        - name: product-specifications
           type: nested
           fields:
-            - name: weight
+            - name: item-weight
               type: number
-            - name: dimensions
+            - name: item-dimensions
               type: nested
               fields:
-                - name: width
+                - name: width-cm
                   type: number
-                - name: height
+                - name: height-cm
                   type: number
-                - name: depth
+                - name: depth-cm
                   type: number
-            - name: materials
+            - name: material-list
               type: array
               count: 3
               itemType: text
-        - name: reviews
-          type: nestedArray
+        - name: customer-reviews
+          type: nested-array
           count: 5
           fields:
-            - name: userId
+            - name: reviewer-id
               type: number
-            - name: rating
+            - name: star-rating
               type: number
-            - name: comment
+            - name: review-comment
               type: text
-            - name: date
+            - name: review-date
               type: date
-    orders:
+    simple-numbers:
       enabled: true
       fields:
-        - name: id
-          type: number
-        - name: userId
-          type: number
-        - name: orderDate
-          type: date
-        - name: status
-          type: text
-        - name: totalAmount
+        - name: number
+          type: number-ascending
+    crypto-hashes:
+      enabled: true
+      fields:
+        - name: sha256-hash
+          type: sha256
+        - name: md5-hash
+          type: md5
+
+images:
+  enabled: true
+  count: 15
+  formats:
+    - jpg
+    - png
+    - webp
+  aspect-ratios:
+    - '1:1'
+    - '4:3'
+    - '16:9'
+    - '21:9'
+    - '9:16'
+  base-sizes:
+    - 320
+    - 480
+    - 640
+    - 800
+    - 1024
+    - 1280
+    - 1920
+  generate-sizes: true
+
+favicons:
+  enabled: true
+  sizes: [16, 32, 48, 64, 128, 180, 192, 256, 512]
+  formats: ['png', 'ico']
+
+programming-codes:
+  enabled: true
+  languages: ['js', 'ts', 'py', 'java', 'go', 'php', 'rb', 'cs', 'cpp', 'c', 'rs', 'swift']
+  count: 5
+```
           type: price
         - name: shippingAddress
           type: nested
@@ -341,19 +389,19 @@ images:
 
 #### Basic Types
 - `number`: Random integer (1-1000)
-- `firstName`: Random first name
-- `lastName`: Random last name
-- `fullName`: Random full name
+- `first-name` / `firstName`: Random first name
+- `last-name` / `lastName`: Random last name
+- `full-name` / `fullName`: Random full name
 - `email`: Random email address
-- `phoneNumber`: Random phone number
+- `phone-number` / `phoneNumber`: Random phone number
 - `address`: Random street address
 - `city`: Random city name
 - `country`: Random country name
-- `companyName`: Random company name
-- `productName`: Random product name
-- `productDescription`: Random product description
+- `company-name` / `companyName`: Random company name
+- `product-name` / `productName`: Random product name
+- `product-description` / `productDescription`: Random product description
 - `price`: Random price (10-1000)
-- `productCategory`: Random product category
+- `product-category` / `productCategory`: Random product category
 - `boolean`: Random boolean value
 - `date`: Random recent date
 - `text`: Random sentence
@@ -362,17 +410,39 @@ images:
 #### Advanced Types
 - `nested`: Creates a nested object with sub-fields
 - `array`: Creates an array of items with specified count and itemType
-- `nestedArray`: Creates an array of nested objects with specified fields
+- `nested-array` / `nestedArray`: Creates an array of nested objects with specified fields
 
 #### Cryptographic & Number Types
-- `numberAsc`: Ascending numbers (1, 2, 3, ...)
-- `numberDesc`: Descending numbers (1000, 999, 998, ...)
-- `numberRandom`: Random numbers (1-10000)
+- `number-ascending` / `numberAsc`: Ascending numbers (1, 2, 3, ...)
+- `number-descending` / `numberDesc`: Descending numbers (1000, 999, 998, ...)
+- `number-random` / `numberRandom`: Random numbers (1-10000)
 - `sha1`: SHA-1 hash
 - `sha256`: SHA-256 hash
 - `md5`: MD5 hash
 - `uuid`: UUID v4 string
 - `uuid4`: Cryptographically secure UUID
+
+#### Simple vs Complex Data Types
+
+**Simple Types** (output values only):
+- Numbers: `11\n12\n13\n...`
+- Hashes: `a1b2c3...\nf4e5d6...\n...`
+- UUIDs: `uuid1\nuuid2\nuuid3\n...`
+
+**Complex Types** (full record structure):
+```json
+{
+  "user-id": 1,
+  "first-name": "John",
+  "last-name": "Doe",
+  "user-profile": {
+    "bio-text": "Software developer...",
+    "social-links": [
+      {"platform-name": "Twitter", "profile-url": "..."}
+    ]
+  }
+}
+```
 
 #### Nested Structure Examples
 ```yaml
@@ -404,77 +474,57 @@ images:
 
 ## Output Structure
 
-The generated files are organized in the following structure:
+The generated files are organized in a clean, kebab-case directory structure:
 
 ```
-fakegen/
-├── users/
-│   ├── json/
-│   │   └── users.json
-│   ├── csv/
-│   │   └── users.csv
-│   ├── txt/
-│   │   └── users.txt
-│   ├── yml/
-│   │   └── users.yml
-│   ├── toml/
-│   │   └── users.toml
-│   └── xml/
-│       └── users.xml
-├── products/
-│   ├── json/
-│   │   └── products.json
-│   ├── csv/
-│   │   └── products.csv
-│   ├── txt/
-│   │   └── products.txt
-│   ├── yml/
-│   │   └── products.yml
-│   ├── toml/
-│   │   └── products.toml
-│   └── xml/
-│       └── products.xml
-├── orders/
-│   ├── json/
-│   │   └── orders.json
-│   ├── csv/
-│   │   └── orders.csv
-│   ├── txt/
-│   │   └── orders.txt
-│   ├── yml/
-│   │   └── orders.yml
-│   ├── toml/
-│   │   └── orders.toml
-│   └── xml/
-│       └── orders.xml
-├── blogPosts/
-│   ├── json/
-│   │   └── blogPosts.json
-│   ├── csv/
-│   │   └── blogPosts.csv
-│   ├── txt/
-│   │   └── blogPosts.txt
-│   ├── yml/
-│   │   └── blogPosts.yml
-│   ├── toml/
-│   │   └── blogPosts.toml
-│   └── xml/
-│       └── blogPosts.xml
-└── images/
-    ├── jpg/
-    │   ├── abstract_1_2560x2560_1:1.jpg
-    │   ├── abstract_2_1920x1080_16:9.jpg
-    │   ├── abstract_3_800x400_2:1.jpg
-    │   └── ...
-    ├── png/
-    │   ├── abstract_1_2560x2560_1:1.png
-    │   ├── abstract_2_1920x1080_16:9.png
-    │   ├── abstract_3_800x400_2:1.png
-    │   └── ...
-    └── webp/
-        ├── abstract_1_2560x2560_1:1.webp
-        ├── abstract_2_1920x1080_16:9.webp
-        └── ...
+fake-data/
+├── data/
+│   ├── user-profiles/
+│   │   ├── json/
+│   │   │   └── user-profiles.json
+│   │   ├── csv/
+│   │   │   └── user-profiles.csv
+│   │   ├── txt/
+│   │   │   └── user-profiles.txt
+│   │   ├── yml/
+│   │   │   └── user-profiles.yml
+│   │   ├── toml/
+│   │   │   └── user-profiles.toml
+│   │   └── xml/
+│   │       └── user-profiles.xml
+│   ├── product-catalog/
+│   │   ├── json/
+│   │   │   └── product-catalog.json
+│   │   └── ... (other formats)
+│   ├── simple-numbers/
+│   │   ├── txt/
+│   │   │   └── simple-numbers.txt    # Contains: 1\n2\n3\n4\n5\n...
+│   │   └── json/
+│   │       └── simple-numbers.json   # Contains: [1, 2, 3, 4, 5, ...]
+│   └── crypto-hashes/
+│       ├── txt/
+│       │   └── crypto-hashes.txt     # Contains: hash1\nhash2\nhash3\n...
+│       └── json/
+│           └── crypto-hashes.json    # Contains: ["hash1", "hash2", ...]
+├── images/
+│   ├── 1-1/                          # Square aspect ratio (1:1)
+│   │   ├── abstract/
+│   │   │   ├── jpg/
+│   │   │   │   ├── 320x320.jpg
+│   │   │   │   ├── 640x640.jpg
+│   │   │   │   └── 1024x1024.jpg
+│   │   │   ├── png/
+│   │   │   └── webp/
+│   │   └── checkerboard/
+│   │       ├── jpg/
+│   │       ├── png/
+│   │       └── webp/
+│   ├── 16-9/                         # Widescreen aspect ratio (16:9)
+│   │   ├── abstract/
+│   │   └── checkerboard/
+│   └── 21-9/                         # Ultra-wide aspect ratio (21:9)
+│       ├── abstract/
+│       └── checkerboard/
 ├── favicons/
 │   ├── png/
 │   │   ├── favicon_16x16.png
@@ -484,49 +534,67 @@ fakegen/
 │   └── ico/
 │       ├── favicon_16x16.ico
 │       ├── favicon_32x32.ico
-│       ├── favicon_64x64.ico
 │       └── ...
-├── programming-code/
-│   ├── hello_1.js
-│   ├── hello_2.py
-│   ├── hello_3.java
-│   ├── hello_1.cs
-│   ├── hello_2.php
-│   └── ...
-├── video/ (optional - requires FFmpeg dependencies)
-│   ├── animation_1.mp4
-│   ├── animation_1.mov
-│   ├── animation_1.mkv
-│   └── ...
-└── audio/ (optional - requires audio dependencies)
-    ├── synthesized_1.wav
-    ├── synthesized_1.mp3
-    ├── synthesized_1.ogg
+└── programming-examples/
+    ├── hello_1.js
+    ├── hello_2.py
+    ├── hello_3.java
     └── ...
 ```
+```
 
-### Image Naming Convention
+### Image Organization
 
-Images are named using the format: `abstract_{number}_{width}x{height}_{aspectRatio}.{format}`
+Images are organized by aspect ratio for better usability:
+- **1-1/**: Square images (1:1 ratio) - perfect for avatars, thumbnails
+- **16-9/**: Widescreen images (16:9 ratio) - modern displays, video thumbnails  
+- **21-9/**: Ultra-wide images (21:9 ratio) - cinematic, banner content
+- **4-3/**: Traditional images (4:3 ratio) - classic photography, presentations
+- **9-16/**: Mobile portrait images (9:16 ratio) - mobile apps, stories
 
-**Examples:**
-- `abstract_1_2560x2560_1:1.jpg` - Square image
-- `abstract_2_1920x1080_16:9.png` - Widescreen image
-- `abstract_3_800x400_2:1.jpg` - Ultra-wide image
+Each aspect ratio directory contains:
+- `abstract/`: Procedurally generated abstract art
+- `checkerboard/`: Colorful checkerboard patterns
 
-### Generated Content
+### Simple Data Format Examples
 
-- **42 Data Files**: 5 data types × 6 formats = 30 files + 15 images
-- **Beautiful Abstract Images**: Pastel colors, organic shapes, flowing patterns
-- **Favicon Set**: 10 different sizes in PNG and ICO formats
-- **Programming Code Examples**: 17+ languages with example "Hello World" files
-- **Video Generation**: 3-second animations with moving pastel balls (optional)
-- **Audio Generation**: 10-second synthesized audio files (optional)
-- **Complex Nested Data**: Multi-level structures with realistic relationships
-- **Multiple Image Formats**: JPG, PNG, WebP, and ICO support
-- **Multiple Video Formats**: mp4, mov, mkv, mpg, mpeg, flv support
-- **Multiple Audio Formats**: mp3, ogg, wav, webm, aac support
-- **Advanced Data Types**: Numbers, hashes, UUIDs, and cryptographic functions
+**Simple Numbers (simple-numbers.txt):**
+```
+1
+2
+3
+4
+5
+```
+
+**Crypto Hashes (crypto-hashes.txt):**
+```
+a1b2c3d4e5f6789...
+f4e5d6c7b8a9123...
+789abc123def456...
+```
+
+### Complex Data Format Examples
+
+**User Profiles (user-profiles.json):**
+```json
+[
+  {
+    "user-id": 1,
+    "first-name": "John",
+    "last-name": "Doe",
+    "email-address": "john.doe@example.com",
+    "user-profile": {
+      "bio-text": "Software developer with 5+ years experience...",
+      "avatar-url": "https://example.com/avatar.jpg",
+      "social-links": [
+        {"platform-name": "Twitter", "profile-url": "https://twitter.com/johndoe"},
+        {"platform-name": "LinkedIn", "profile-url": "https://linkedin.com/in/johndoe"}
+      ]
+    }
+  }
+]
+```
 
 ## Examples
 
@@ -545,102 +613,64 @@ npx fakegen -o ./my-test-data
 npx fakegen -c ./custom-config.yml
 ```
 
-### Advanced Usage
-```bash
-# Generate only data files (skip images)
-npx fakegen --no-images
-
-# Generate only images (skip data)
-npx fakegen --images-only
-
-# Generate large dataset for performance testing
-npx fakegen -n 1000 -o ./performance-test
-
-# Generate minimal dataset for quick prototyping
-npx fakegen -n 5 -o ./prototype-data
-```
-
 ### Configuration Examples
 ```bash
 # Initialize default configuration
 npx fakegen init
 
-# Generate with specific data types only
-# Edit .fakegen.yml to disable unwanted data types:
-# users:
-#   enabled: true
-# products:
-#   enabled: false
-# orders:
-#   enabled: false
-# blogPosts:
-#   enabled: false
+# Edit .fakegen.yml to customize:
+# - Enable/disable specific data types
+# - Change output directory
+# - Modify aspect ratios and sizes
+# - Adjust field configurations
 ```
 
-### Generated Data Examples
-
-**Users with nested profile:**
+**Product Catalog (product-catalog.json):**
 ```json
-{
-  "id": 123,
-  "firstName": "John",
-  "lastName": "Doe",
-  "email": "john.doe@example.com",
-  "profile": {
-    "bio": "Software developer with 5+ years experience...",
-    "avatar": "https://example.com/avatar.jpg",
-    "socialLinks": [
-      {"platform": "Twitter", "url": "https://twitter.com/johndoe"},
-      {"platform": "LinkedIn", "url": "https://linkedin.com/in/johndoe"}
+[
+  {
+    "product-id": 1,
+    "product-name": "Wireless Headphones",
+    "unit-price": 129.99,
+    "product-specifications": {
+      "item-weight": 250,
+      "item-dimensions": {
+        "width-cm": 18,
+        "height-cm": 16,
+        "depth-cm": 8
+      },
+      "material-list": ["Plastic", "Metal", "Silicone"]
+    },
+    "customer-reviews": [
+      {
+        "reviewer-id": 123,
+        "star-rating": 5,
+        "review-comment": "Excellent sound quality!",
+        "review-date": "2024-01-15T10:30:00.000Z"
+      }
     ]
   }
-}
-```
-
-**Products with specifications and reviews:**
-```json
-{
-  "id": 456,
-  "name": "Wireless Headphones",
-  "specifications": {
-    "weight": 250,
-    "dimensions": {
-      "width": 180,
-      "height": 160,
-      "depth": 80
-    },
-    "materials": ["Plastic", "Metal", "Silicone"]
-  },
-  "reviews": [
-    {
-      "userId": 123,
-      "rating": 5,
-      "comment": "Excellent sound quality!",
-      "date": "2024-01-15"
-    }
-  ]
-}
+]
 ```
 
 ## Dependencies
 
+### Core Dependencies
 - `@faker-js/faker`: For generating realistic fake data
-- `canvas`: For high-quality image generation with graphics API
+- `sharp`: For high-quality image generation and processing
 - `js-yaml`: For YAML configuration parsing and generation
-- `toml`: For TOML format support
-- `xmlbuilder2`: For XML generation with proper structure
-- `commander`: For CLI argument parsing and help generation
 - `fs-extra`: For enhanced file system operations
-- `crypto`: For generating unique identifiers and hashes
+- `crypto`: For generating unique identifiers and hashes (Node.js built-in)
 
-### Optional Dependencies (for Video & Audio)
+### Image Generation Dependencies
+- `sharp`: High-performance image processing library
+- Built-in Canvas API support for procedural image generation
 
-- `fluent-ffmpeg`: For video generation and processing
-- `@ffmpeg-installer/ffmpeg`: FFmpeg binary for video operations
-- `audiobuffer-to-wav`: For WAV audio file generation
-- `node-lame`: For MP3 audio encoding
-- `wav-encoder`: For WAV file encoding
-- `ogg`: For OGG audio format support
+### Configuration and CLI Dependencies
+- `commander`: For CLI argument parsing and help generation
+- `js-yaml`: For YAML configuration file support
+
+**Note**: Video and audio generation features are disabled by default. The core functionality (data generation, images, favicons, programming codes) works out of the box with no additional setup required.
 
 ## Development
 
@@ -694,28 +724,29 @@ node src/image/generator.js
 
 ## What's New
 
-### Version 2.0 Enhancements
+### Version 4.0 Major Refactor
+- ✅ **Kebab-Case Organization**: Clean, consistent naming throughout the codebase
+- ✅ **Simple Data Types**: Numbers, hashes, UUIDs output values only (no verbose formatting)
+- ✅ **Standard Aspect Ratios**: Industry-standard image sizes (1:1, 4:3, 16:9, 21:9, 9:16)
+- ✅ **Organized Directory Structure**: Logical grouping by data complexity and aspect ratio
+- ✅ **Legacy Support**: Automatic conversion from old camelCase configurations
+- ✅ **Enhanced Configuration**: Modular configuration system with clear separation of concerns
+
+### Key Improvements
+- 📁 **Better File Organization**: Data grouped in `/data/` subdirectory with kebab-case names
+- 🖼️ **Smarter Image Organization**: Images organized by aspect ratio (`/images/16-9/`, `/images/1-1/`)
+- 📝 **Simplified Simple Data**: Numbers files now contain just `1\n2\n3\n` instead of verbose records
+- 🔧 **Cleaner Configuration**: New kebab-case field names (`first-name`, `user-id`, `aspect-ratios`)
+- 🎯 **Industry Standards**: Standard aspect ratios and common image sizes built-in
+
+### Previous Features Maintained
 - ✅ **6 Data Formats**: JSON, CSV, TXT, YML, TOML, XML
-- ✅ **4 Data Types**: Users, Products, Orders, BlogPosts
-- ✅ **Beautiful Abstract Images**: Pastel colors, organic shapes, flowing patterns
+- ✅ **Multiple Data Types**: User profiles, product catalogs, order history, blog posts
+- ✅ **Beautiful Abstract Images**: Procedurally generated art with pastel colors
 - ✅ **Complex Nested Structures**: Multi-level objects and arrays
-- ✅ **15+ Image Sizes**: Dynamic aspect ratio generation
+- ✅ **Favicon Generation**: Multiple sizes with PNG and ICO formats
+- ✅ **Programming Code Examples**: Multiple languages with example files
 - ✅ **Robust Error Handling**: Fallback mechanisms for edge cases
-- ✅ **Modular Architecture**: Clean separation of concerns
-
-### Recent Fixes
-- ✅ **Size Calculation**: Fixed "Max < Min" errors in image generation
-- ✅ **WebP Compatibility**: Added WebP format support with quality optimization
-- ✅ **Nested Data**: Proper serialization across all formats
-- ✅ **Small Images**: Support for 1x1 pixel and tiny dimensions
-
-### Version 3.0 New Features
-- ✅ **5 Data Types**: Added Numbers type with cryptographic functions
-- ✅ **Advanced Data Types**: SHA keys, UUIDs, ascending/descending numbers
-- ✅ **Favicon Generation**: 10 different sizes with PNG and ICO formats
-- ✅ **Programming Code Examples**: 17+ languages with example files
-- ✅ **Enhanced Image Support**: WebP format with quality optimization
-- ✅ **Modular Architecture**: New favicon and code generation modules
 
 ## License
 

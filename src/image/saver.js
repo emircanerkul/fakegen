@@ -3,9 +3,9 @@ const path = require('path');
 
 /**
  * Save image in different formats
- * @param {Sharp} sharpInstance - Sharp instance
+ * @param {Sharp|Object} sharpInstance - Sharp instance or object with Sharp instance and SVG content
  * @param {string} filename - Filename without extension
- * @param {string} format - Image format (jpg, png, webp, ico)
+ * @param {string} format - Image format (jpg, png, webp, svg, ico)
  * @param {string} outputDir - Output directory
  * @returns {Promise<void>}
  */
@@ -17,33 +17,49 @@ async function saveImage(sharpInstance, filename, format, outputDir) {
 
   try {
     let buffer;
+    let actualSharpInstance = sharpInstance;
+    
+    // Handle case where sharpInstance is an object with SVG content
+    if (sharpInstance && typeof sharpInstance === 'object' && sharpInstance.sharp) {
+      actualSharpInstance = sharpInstance.sharp;
+    }
 
     switch (format) {
+      case 'svg':
+        // For SVG format, save the original SVG content if available
+        if (sharpInstance && sharpInstance.svgContent) {
+          buffer = Buffer.from(sharpInstance.svgContent, 'utf8');
+        } else {
+          // Fallback: convert to SVG using Sharp if no original content
+          console.warn(`No SVG content available for ${filename}, converting Sharp instance to SVG`);
+          buffer = await actualSharpInstance.svg().toBuffer();
+        }
+        break;
       case 'png':
-        buffer = await sharpInstance.png().toBuffer();
+        buffer = await actualSharpInstance.png().toBuffer();
         break;
       case 'jpg':
       case 'jpeg':
-        buffer = await sharpInstance.jpeg({ quality: 90 }).toBuffer();
+        buffer = await actualSharpInstance.jpeg({ quality: 90 }).toBuffer();
         break;
       case 'webp':
         try {
-          buffer = await sharpInstance.webp({ quality: 90 }).toBuffer();
+          buffer = await actualSharpInstance.webp({ quality: 90 }).toBuffer();
           if (!buffer || buffer.length === 0) {
             throw new Error('Empty WebP buffer');
           }
         } catch (webpError) {
           console.warn(`WebP generation failed (${webpError.message}), falling back to PNG for ${filename}`);
-          buffer = await sharpInstance.png().toBuffer();
+          buffer = await actualSharpInstance.png().toBuffer();
         }
         break;
       case 'ico':
         // For ICO format, convert to PNG first then create ICO
-        const pngBuffer = await sharpInstance.png().toBuffer();
+        const pngBuffer = await actualSharpInstance.png().toBuffer();
         buffer = createICOBFromPNG(pngBuffer);
         break;
       default:
-        buffer = await sharpInstance.png().toBuffer();
+        buffer = await actualSharpInstance.png().toBuffer();
     }
 
     await fs.writeFile(filepath, buffer);

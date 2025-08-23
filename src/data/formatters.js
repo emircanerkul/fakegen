@@ -1,10 +1,26 @@
+const { isSimpleDataType } = require('../config/data-types');
+
 /**
  * Convert data to CSV format
  * @param {Array<Object>} data - Data to convert
+ * @param {string} typeName - Data type name for formatting decisions
  * @returns {string} CSV formatted string
  */
-function convertToCSV(data) {
+function convertToCSV(data, typeName = '') {
   if (data.length === 0) return '';
+
+  // For simple data types, just output values without headers
+  if (isSimpleDataType(typeName)) {
+    return data.map(item => {
+      const firstField = Object.keys(item)[0];
+      const value = item[firstField];
+      // Escape quotes and wrap in quotes if contains comma or quotes
+      if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    }).join('\n');
+  }
 
   // Helper function to flatten nested objects
   function flattenObject(obj, prefix = '') {
@@ -55,11 +71,45 @@ function convertToCSV(data) {
 /**
  * Convert data to TXT format
  * @param {Array<Object>} data - Data to convert
+ * @param {string} typeName - Data type name for formatting decisions
  * @returns {string} TXT formatted string
  */
-function convertToTXT(data) {
+function convertToTXT(data, typeName = '') {
   if (data.length === 0) return '';
 
+  // Check if this is a simple data type that should only show values
+  if (isSimpleDataType(typeName)) {
+    return formatSimpleDataForTXT(data);
+  }
+
+  // Complex data types get full record formatting
+  return formatComplexDataForTXT(data);
+}
+
+/**
+ * Format simple data types (numbers, hashes, etc.) with minimal formatting
+ * @param {Array<Object>} data - Data to convert
+ * @returns {string} Simple formatted string
+ */
+function formatSimpleDataForTXT(data) {
+  const lines = [];
+  
+  data.forEach(item => {
+    // For simple types, just extract the first field value
+    const firstField = Object.keys(item)[0];
+    const value = item[firstField];
+    lines.push(String(value));
+  });
+  
+  return lines.join('\n');
+}
+
+/**
+ * Format complex data types with full record structure
+ * @param {Array<Object>} data - Data to convert
+ * @returns {string} Complex formatted string
+ */
+function formatComplexDataForTXT(data) {
   // Helper function to format nested objects
   function formatValue(value, indent = '') {
     if (Array.isArray(value)) {
@@ -91,22 +141,43 @@ function convertToTXT(data) {
 /**
  * Convert data to YML format
  * @param {Array<Object>} data - Data to convert
+ * @param {string} typeName - Data type name for formatting decisions
  * @returns {string} YML formatted string
  */
-function convertToYML(data) {
+function convertToYML(data, typeName = '') {
   if (data.length === 0) return '';
 
   const yaml = require('js-yaml');
+  
+  // For simple data types, convert to simple array format
+  if (isSimpleDataType(typeName)) {
+    const simpleArray = data.map(item => {
+      const firstField = Object.keys(item)[0];
+      return item[firstField];
+    });
+    return yaml.dump(simpleArray, { indent: 2 });
+  }
+  
   return yaml.dump(data, { indent: 2 });
 }
 
 /**
  * Convert data to TOML format
  * @param {Array<Object>} data - Data to convert
+ * @param {string} typeName - Data type name for formatting decisions
  * @returns {string} TOML formatted string
  */
-function convertToTOML(data) {
+function convertToTOML(data, typeName = '') {
   if (data.length === 0) return '';
+
+  // For simple data types, create a simple array format
+  if (isSimpleDataType(typeName)) {
+    const simpleArray = data.map(item => {
+      const firstField = Object.keys(item)[0];
+      return item[firstField];
+    });
+    return `values = ${JSON.stringify(simpleArray)}`;
+  }
 
   let tomlString = '';
 
@@ -154,10 +225,25 @@ function convertToTOML(data) {
  * Convert data to XML format
  * @param {Array<Object>} data - Data to convert
  * @param {string} rootName - Root element name (default: 'records')
+ * @param {string} typeName - Data type name for formatting decisions
  * @returns {string} XML formatted string
  */
-function convertToXML(data, rootName = 'records') {
+function convertToXML(data, rootName = 'records', typeName = '') {
   if (data.length === 0) return `<?xml version="1.0" encoding="UTF-8"?>\n<${rootName}></${rootName}>`;
+
+  // For simple data types, create a simple list format
+  if (isSimpleDataType(typeName)) {
+    let xmlString = `<?xml version="1.0" encoding="UTF-8"?>\n<${rootName}>\n`;
+    
+    data.forEach(item => {
+      const firstField = Object.keys(item)[0];
+      const value = item[firstField];
+      xmlString += `  <value>${String(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</value>\n`;
+    });
+    
+    xmlString += `</${rootName}>`;
+    return xmlString;
+  }
 
   // Helper function to convert value to XML-safe string
   function valueToXML(value, indent = '') {

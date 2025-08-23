@@ -235,7 +235,7 @@ function createCheckerboardSvg(baseSize, squareSize, color1, color2) {
  * @param {number} width - Image width
  * @param {number} height - Image height
  * @param {string} format - Image format
- * @returns {Sharp} Generated Sharp instance
+ * @returns {Object|Sharp} For SVG format returns {sharp: Sharp, svgContent: string}, otherwise returns Sharp instance
  * @throws {Error} If parameters are invalid
  */
 function generateCheckerboardImage(width, height, format = 'jpg') {
@@ -260,12 +260,29 @@ function generateCheckerboardImage(width, height, format = 'jpg') {
   const svgContent = createCheckerboardSvg(baseSize, squareSize, color1, color2);
 
   // Create Sharp instance and resize
-  return sharp(Buffer.from(svgContent))
+  const sharpInstance = sharp(Buffer.from(svgContent))
     .resize(originalWidth, originalHeight, {
       fit: 'cover',
       position: 'center',
       withoutEnlargement: false
     });
+
+  // For SVG format, return both the Sharp instance and original SVG content
+  if (format === 'svg') {
+    // Scale the SVG content to the target dimensions
+    const targetSize = Math.max(originalWidth, originalHeight);
+    const targetSquareSize = Math.max(10, Math.floor(targetSize / 15));
+    const scaledSvgContent = createCheckerboardSvg(targetSize, targetSquareSize, color1, color2)
+      .replace(/width="\d+"/, `width="${originalWidth}"`)
+      .replace(/height="\d+"/, `height="${originalHeight}"`);
+    
+    return {
+      sharp: sharpInstance,
+      svgContent: scaledSvgContent
+    };
+  }
+
+  return sharpInstance;
 }
 
 /**
@@ -328,7 +345,7 @@ function createAbstractSvg(baseSize, format) {
  * @param {number} width - Image width
  * @param {number} height - Image height
  * @param {string} format - Image format
- * @returns {Sharp} Generated Sharp instance
+ * @returns {Object|Sharp} For SVG format returns {sharp: Sharp, svgContent: string}, otherwise returns Sharp instance
  * @throws {Error} If parameters are invalid
  */
 function generateAbstractImage(width, height, format = 'jpg') {
@@ -347,12 +364,27 @@ function generateAbstractImage(width, height, format = 'jpg') {
   const svgContent = createAbstractSvg(baseSize, format);
 
   // Create Sharp instance and resize
-  return sharp(Buffer.from(svgContent))
+  const sharpInstance = sharp(Buffer.from(svgContent))
     .resize(originalWidth, originalHeight, {
       fit: 'cover',
       position: 'center',
       withoutEnlargement: false
     });
+
+  // For SVG format, return both the Sharp instance and original SVG content
+  if (format === 'svg') {
+    // Scale the SVG content to the target dimensions
+    const scaledSvgContent = createAbstractSvg(Math.max(originalWidth, originalHeight), format)
+      .replace(/width="\d+"/, `width="${originalWidth}"`)
+      .replace(/height="\d+"/, `height="${originalHeight}"`);
+    
+    return {
+      sharp: sharpInstance,
+      svgContent: scaledSvgContent
+    };
+  }
+
+  return sharpInstance;
 }
 
 module.exports = {

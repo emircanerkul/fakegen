@@ -7,9 +7,10 @@ const { saveImage } = require('./saver');
 /**
  * Generate a simple favicon with geometric patterns
  * @param {number} size - Size of the favicon (width and height)
- * @returns {Sharp} Generated Sharp instance
+ * @param {string} format - Target format
+ * @returns {Object|Sharp} For SVG format returns {sharp: Sharp, svgContent: string}, otherwise returns Sharp instance
  */
-function generateFavicon(size) {
+function generateFavicon(size, format = 'png') {
   // Generate a simple geometric favicon
   const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57', '#FF9FF3', '#54A0FF', '#5F27CD'];
   const bgColor = faker.helpers.arrayElement(colors);
@@ -52,7 +53,17 @@ function generateFavicon(size) {
 
   svgContent += '</svg>';
 
-  return sharp(Buffer.from(svgContent));
+  const sharpInstance = sharp(Buffer.from(svgContent));
+
+  // For SVG format, return both the Sharp instance and original SVG content
+  if (format === 'svg') {
+    return {
+      sharp: sharpInstance,
+      svgContent: svgContent
+    };
+  }
+
+  return sharpInstance;
 }
 
 /**
@@ -71,10 +82,9 @@ async function generateFavicons(config, outputDir) {
   await fs.ensureDir(faviconDir);
 
   for (const size of config.favicons.sizes) {
-    // Generate a favicon canvas
-    const faviconCanvas = generateFavicon(size);
-
     for (const format of config.favicons.formats) {
+      // Generate a favicon canvas
+      const faviconCanvas = generateFavicon(size, format);
       const filename = `favicon_${size}x${size}`;
       await saveImage(faviconCanvas, filename, format, faviconDir);
     }

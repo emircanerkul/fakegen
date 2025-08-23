@@ -59,10 +59,13 @@ function generateFakeDataForField(type, fieldConfig = {}) {
   switch (type) {
     case 'number':
       return faker.number.int({ min: 1, max: 1000 });
+    case 'number-ascending':
     case 'numberAsc':
       return getNextAscNumber();
+    case 'number-descending':
     case 'numberDesc':
       return getNextDescNumber();
+    case 'number-random':
     case 'numberRandom':
       return faker.number.int({ min: 1, max: 10000 });
     case 'sha1':
@@ -75,14 +78,18 @@ function generateFakeDataForField(type, fieldConfig = {}) {
       return faker.string.uuid();
     case 'uuid4':
       return crypto.randomUUID();
+    case 'first-name':
     case 'firstName':
       return faker.person.firstName();
+    case 'last-name':
     case 'lastName':
       return faker.person.lastName();
+    case 'full-name':
     case 'fullName':
       return faker.person.fullName();
     case 'email':
       return faker.internet.email();
+    case 'phone-number':
     case 'phoneNumber':
       return faker.phone.number();
     case 'address':
@@ -91,14 +98,18 @@ function generateFakeDataForField(type, fieldConfig = {}) {
       return faker.location.city();
     case 'country':
       return faker.location.country();
+    case 'company-name':
     case 'companyName':
       return faker.company.name();
+    case 'product-name':
     case 'productName':
       return faker.commerce.productName();
+    case 'product-description':
     case 'productDescription':
       return faker.commerce.productDescription();
     case 'price':
       return parseFloat(faker.commerce.price({ min: 10, max: 1000 }));
+    case 'product-category':
     case 'productCategory':
       return faker.commerce.department();
     case 'boolean':
@@ -118,6 +129,7 @@ function generateFakeDataForField(type, fieldConfig = {}) {
         });
       }
       return nestedObj;
+    case 'nested-array':
     case 'nestedArray':
       // Generate array of nested objects
       const nestedArray = [];
