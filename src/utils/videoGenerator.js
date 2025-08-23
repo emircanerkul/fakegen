@@ -116,20 +116,85 @@ async function generateSimpleVideo(options = {}) {
   const outputPath = path.join(tempDir, `output_${Date.now()}.${format}`);
 
   return new Promise((resolve, reject) => {
-    ffmpeg()
+    // Configure FFmpeg options based on format
+    let command = ffmpeg()
       .input(path.join(frameDir, 'frame_%04d.png'))
       .inputFPS(fps)
-      .outputOptions([
-        '-c:v libx264',
-        '-pix_fmt yuv420p',
-        '-preset ultrafast',
-        '-crf 18',
-        '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2',
-        '-movflags +faststart'
-      ])
       .outputFPS(fps)
-      .duration(duration)
-      .save(outputPath)
+      .duration(duration);
+
+    // Format-specific codec configuration
+    switch (format) {
+      case 'webm':
+        // Try VP9 first, fall back to VP8 if VP9 is not available
+        command = command.outputOptions([
+          '-c:v libvpx-vp9',
+          '-pix_fmt yuv420p',
+          '-crf 30',
+          '-b:v 1M',
+          '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2',
+          '-deadline realtime',
+          '-cpu-used 8'
+        ]);
+        break;
+      
+      case 'mkv':
+        command = command.outputOptions([
+          '-c:v libx264',
+          '-pix_fmt yuv420p',
+          '-preset ultrafast',
+          '-crf 18',
+          '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2'
+        ]);
+        break;
+      
+      case 'avi':
+        // Use H.264 instead of XviD for better compatibility
+        command = command.outputOptions([
+          '-c:v libx264',
+          '-pix_fmt yuv420p',
+          '-preset ultrafast',
+          '-crf 18',
+          '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2'
+        ]);
+        break;
+      
+      case 'flv':
+        command = command.outputOptions([
+          '-c:v libx264',
+          '-pix_fmt yuv420p',
+          '-preset ultrafast',
+          '-crf 18',
+          '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2',
+          '-f flv'
+        ]);
+        break;
+      
+      case 'mpg':
+      case 'mpeg':
+        command = command.outputOptions([
+          '-c:v mpeg2video',
+          '-pix_fmt yuv420p',
+          '-b:v 2M',
+          '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2'
+        ]);
+        break;
+      
+      case 'mov':
+      case 'mp4':
+      default:
+        command = command.outputOptions([
+          '-c:v libx264',
+          '-pix_fmt yuv420p',
+          '-preset ultrafast',
+          '-crf 18',
+          '-vf scale=640:480:force_original_aspect_ratio=decrease,pad=640:480:(ow-iw)/2:(oh-ih)/2',
+          '-movflags +faststart'
+        ]);
+        break;
+    }
+
+    command.save(outputPath)
       .on('end', () => {
         try {
           // Read the generated video file
@@ -148,13 +213,19 @@ async function generateSimpleVideo(options = {}) {
         }
       })
       .on('error', (err) => {
-        console.error('FFmpeg error:', err.message);
+        console.error(`FFmpeg error for ${format}:`, err.message);
 
         // Clean up temporary files
         try {
           fs.rmSync(frameDir, { recursive: true, force: true });
         } catch (cleanupErr) {
           console.warn('Could not clean up temporary files:', cleanupErr.message);
+        }
+
+        // For WebM, provide specific guidance
+        if (format === 'webm') {
+          console.warn('WebM encoding failed. This may be due to missing VP9 codec support.');
+          console.warn('Try installing a complete FFmpeg build with VP9 support.');
         }
 
         reject(err);
@@ -205,6 +276,13 @@ async function generateVideos(config, outputDir) {
 
       } catch (error) {
         console.error(`Error generating video ${format}:`, error.message);
+        
+        // Provide format-specific guidance
+        if (format === 'webm') {
+          console.warn('WebM generation failed. Continuing with other formats...');
+        } else if (format === 'avi') {
+          console.warn('AVI generation failed. This may be due to missing XviD codec. Continuing with other formats...');
+        }
       }
     }
   }

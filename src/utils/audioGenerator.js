@@ -30,28 +30,29 @@ try {
 
 /**
  * Audio quality profiles for different use cases
+ * Sample rates optimized for libopus compatibility
  */
 const AUDIO_QUALITY_PROFILES = {
   low: {
-    sampleRate: 22050,
+    sampleRate: 16000, // Opus-compatible low rate
     bitrate: '96k',
     vorbisQuality: 2,
     description: 'Low quality for testing'
   },
   standard: {
-    sampleRate: 44100,
+    sampleRate: 48000, // Opus standard rate
     bitrate: '128k',
     vorbisQuality: 4,
     description: 'Standard quality (default)'
   },
   high: {
-    sampleRate: 48000,
+    sampleRate: 48000, // Opus standard rate (no need for higher)
     bitrate: '192k',
     vorbisQuality: 6,
     description: 'High quality for production'
   },
   premium: {
-    sampleRate: 96000,
+    sampleRate: 48000, // Opus maximum practical rate
     bitrate: '320k',
     vorbisQuality: 8,
     description: 'Premium quality for mastering'
@@ -438,11 +439,22 @@ async function generateWithFFmpeg(audioData, sampleRate, numChannels, totalSampl
           break;
           
         case 'webm':
+          // libopus has specific requirements for sample rate and channels
+          const opusSampleRate = targetSampleRate >= 48000 ? 48000 : 
+                               targetSampleRate >= 24000 ? 24000 : 
+                               targetSampleRate >= 16000 ? 16000 : 
+                               targetSampleRate >= 12000 ? 12000 : 8000;
+          
           ffmpegCommand
             .audioCodec('libopus')
-            .audioBitrate(bitrate)
-            .audioChannels(numChannels)
-            .audioFrequency(targetSampleRate)
+            .audioChannels(Math.min(numChannels, 2)) // Opus supports up to 2 channels for simple mode
+            .audioFrequency(opusSampleRate)
+            .outputOptions([
+              '-b:a', bitrate || '128k',
+              '-vbr', 'on',
+              '-compression_level', '10',
+              '-application', 'audio'
+            ])
             .format('webm');
           break;
           
@@ -485,6 +497,15 @@ async function generateWithFFmpeg(audioData, sampleRate, numChannels, totalSampl
         })
         .on('error', (error) => {
           console.error(`FFmpeg error for ${format}:`, error.message);
+          
+          // Provide format-specific guidance
+          if (format === 'webm') {
+            console.warn('WebM (Opus) encoding failed. This may be due to:');
+            console.warn('  - Missing libopus codec in FFmpeg build');
+            console.warn('  - Incompatible sample rate or channel configuration');
+            console.warn('  - Try installing a complete FFmpeg build with Opus support');
+          }
+          
           // Clean up temp files on error
           try {
             if (fs.existsSync(tempWavPath)) fs.unlinkSync(tempWavPath);

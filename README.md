@@ -1,4 +1,4 @@
-# FakeGen
+# FakeGen (Generate Dummy Files)
 
 A powerful CLI tool to generate comprehensive fake data and beautiful abstract images using faker and canvas. Perfect for testing, prototyping, and development purposes.
 
@@ -7,6 +7,10 @@ A powerful CLI tool to generate comprehensive fake data and beautiful abstract i
 > 2. [Initial promt](history/roo_task_aug-23-2025_7-59-27-am.md)
 > 3. [Initial promt](history/roo_task_aug-23-2025_8-35-56-am.md)
 > 4. [Initial promt](history/roo_task_aug-23-2025_8-40-46-am.md)
+
+> **DISCLAIMER (UPDATE):** when sonic stuck at some audio generation task, switched to new [qoder](https://qoder.com/) ide used free trial plan.
+
+> **My Opinions:** both tools are great and at the time of generating (or lets say developing..) this package both was free. Sonic as named, it is really fast but lack of advanced coding skills. When it stuck at some point qoder able to fix it. Qoder also fast and has good quality results but a bit more slow than sonic but handles tasks better, no need to do context engineering or prompt magic, it does it all for you in design phase then proceed as like taskmaster does.
 
 ## Features
 
