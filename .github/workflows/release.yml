@@ -26,14 +26,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         
-      - name: Setup Node.js
+      - name: Setup Node.js with NPM Registry
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           registry-url: 'https://registry.npmjs.org'
+          scope: '@your-scope' # Remove this line if not using scoped packages
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           
       - name: Install dependencies
         run: npm ci
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         
       - name: Run basic functionality test
         run: |
@@ -105,14 +110,104 @@ jobs:
           echo "🏗️ Validating package structure..."
           npm pack --dry-run
           
-      - name: Publish to NPM
-        if: ${{ github.event.inputs.publish == 'true' }}
+      - name: Debug NPM Configuration
         run: |
-          echo "🚀 Publishing to NPM..."
-          npm publish
+          echo "🔍 Debugging NPM configuration..."
+          echo "Registry: $(npm config get registry)"
+          echo "Auth token present: $(if [ -n "$NODE_AUTH_TOKEN" ]; then echo "Yes (masked)"; else echo "No"; fi)"
+          echo "NPM version: $(npm --version)"
+          echo "Node version: $(node --version)"
+          
+          echo "🔗 Testing NPM registry connection..."
+          if npm ping > /dev/null 2>&1; then
+            echo "✅ NPM registry connection successful"
+          else
+            echo "❌ NPM registry connection failed"
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           
+      - name: Validate NPM Authentication
+        run: |
+          echo "🔐 Validating NPM authentication..."
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "❌ NPM_TOKEN secret is not set"
+            exit 1
+          fi
+          
+          echo "🔍 Checking NPM authentication..."
+          if ! npm whoami > /dev/null 2>&1; then
+            echo "❌ NPM authentication failed"
+            echo "Please verify NPM_TOKEN secret is valid"
+            exit 1
+          fi
+          
+          echo "✅ NPM authentication verified"
+          echo "📝 Authenticated as: $(npm whoami)"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+      - name: Dry Run NPM Publish
+        run: |
+          echo "🧪 Testing NPM publish (dry run)..."
+          npm publish --dry-run
+          echo "✅ Dry run completed successfully"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+      - name: Conditional NPM Publish
+        if: ${{ github.event.inputs.publish == 'true' }}
+        run: |
+          echo "🚀 Publishing package to NPM registry..."
+          
+          # Check if package already exists at this version
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" > /dev/null 2>&1; then
+            echo "⚠️ Version ${PACKAGE_VERSION} already exists"
+            echo "Skipping publish to prevent conflicts"
+            exit 0
+          fi
+          
+          # Perform the publish
+          npm publish --access public
+          
+          # Verify publication
+          sleep 5
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" > /dev/null 2>&1; then
+            echo "✅ Package ${PACKAGE_NAME}@${PACKAGE_VERSION} published successfully"
+          else
+            echo "❌ Publication verification failed"
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+      - name: Verify NPM Package Publication
+        if: ${{ github.event.inputs.publish == 'true' }}
+        run: |
+          echo "🔍 Verifying published package..."
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          
+          # Wait for NPM propagation
+          echo "⏳ Waiting for package propagation..."
+          sleep 10
+          
+          # Verify package exists and get details
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" > /dev/null 2>&1; then
+            echo "✅ Package ${PACKAGE_NAME}@${PACKAGE_VERSION} is available on NPM"
+            echo "📦 Package details:"
+            npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" --json | jq -r '.name, .version, .description'
+          else
+            echo "❌ Package verification failed - not found on NPM registry"
+            echo "🔍 Checking if package exists with different version..."
+            npm view "${PACKAGE_NAME}" versions --json || echo "Package not found in registry"
+            exit 1
+          fi
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create Git tag
         if: ${{ github.event.inputs.publish == 'true' }}
         run: |
@@ -127,6 +222,22 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
+      - name: Notify on Failure
+        if: failure()
+        run: |
+          echo "❌ Workflow failed - Troubleshooting information:"
+          echo "📋 Common issues and solutions:"
+          echo "1. NPM_TOKEN secret not configured or expired"
+          echo "2. Package name conflicts or version already exists"
+          echo "3. Network connectivity issues with NPM registry"
+          echo "4. Insufficient permissions for package publishing"
+          echo ""
+          echo "🔧 Debug checklist:"
+          echo "- Verify NPM_TOKEN secret is set in repository settings"
+          echo "- Ensure token has publish permissions for the package"
+          echo "- Check if package version already exists on NPM"
+          echo "- Verify package.json configuration is correct"
+          
       - name: Create GitHub release
         if: ${{ github.event.inputs.publish == 'true' }}
         uses: actions/create-release@v1
@@ -139,13 +250,16 @@ jobs:
             ## Changes in v${{ github.event.inputs.version }}
             
             ### 🐛 Bug Fixes
-            - Fixed code generator configuration key mismatch issue
-            - Code generation now works properly with kebab-case configuration
+            - Fixed NPM token configuration for GitHub Actions publishing
+            - Enhanced authentication validation and error handling
+            - Improved workflow debugging and troubleshooting capabilities
             
             ### 🚀 Features
             - Automated GitHub Actions release workflow
-            - Comprehensive testing validation
-            - Manual release process with version control
+            - Comprehensive NPM authentication validation
+            - Pre-publish dry-run testing
+            - Post-deployment verification
+            - Enhanced error handling and debugging
             
             ### 📦 Installation
             ```bash
@@ -154,10 +268,10 @@ jobs:
             
             ### 🧪 Testing
             The package has been tested with:
-            - ✅ Code generator functionality
-            - ✅ File structure validation  
-            - ✅ Content validation
-            - ✅ Multiple format support
+            - ✅ NPM authentication validation
+            - ✅ Pre-publish dry-run testing
+            - ✅ Publication verification
+            - ✅ Comprehensive error handling
             
             Generated using automated release workflow.
           draft: false

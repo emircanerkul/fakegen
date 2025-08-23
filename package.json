@@ -4,7 +4,7 @@
   "description": "A CLI tool to generate fake data and images using faker and lightweight image generation",
   "main": "src/index.js",
   "bin": {
-    "fakegen": "./bin/fakegen.js"
+    "fakegen": "bin/fakegen.js"
   },
   "exports": {
     "./config": "./src/config/index.js",
