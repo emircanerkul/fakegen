@@ -1,0 +1,59 @@
+name: Test FakeGen
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Test FakeGen functionality
+        run: |
+          echo "🧪 Testing FakeGen..."
+          npm run start
+          
+      - name: Validate code generator
+        run: |
+          echo "🔍 Checking code generator output..."
+          ls -la fakegen/programming-code/ | head -20
+          
+          # Check that programming code files exist
+          test -f fakegen/programming-code/hello_1.js || exit 1
+          test -f fakegen/programming-code/hello_1.py || exit 1
+          
+          echo "✅ Code generator test passed"
+          
+      - name: Validate other generated content
+        run: |
+          echo "📁 Checking generated directories..."
+          test -d fakegen/data || exit 1
+          test -d fakegen/images || exit 1
+          test -d fakegen/favicon || exit 1
+          
+          echo "✅ Directory structure test passed"
+          
+      - name: Display file counts
+        run: |
+          echo "📊 Generated file statistics:"
+          echo "- Programming codes: $(ls fakegen/programming-code/ | wc -l) files"
+          echo "- Data files: $(find fakegen/data -type f | wc -l) files"
+          echo "- Images: $(find fakegen/images -type f | wc -l) files"
+          echo "- Favicons: $(find fakegen/favicon -type f | wc -l) files"
+          echo "- Audio files: $(find fakegen/audio -type f | wc -l) files"
+          echo "- Video files: $(find fakegen/video -type f | wc -l) files"

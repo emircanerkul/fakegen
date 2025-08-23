@@ -1,0 +1,181 @@
+name: Manual Package Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.0)'
+        required: true
+        type: string
+      publish:
+        description: 'Publish to NPM'
+        required: true
+        type: boolean
+        default: true
+      test_coverage:
+        description: 'Run extended tests'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run basic functionality test
+        run: |
+          echo "🧪 Testing FakeGen functionality..."
+          npm run start
+          
+      - name: Validate code generator works
+        run: |
+          echo "🔍 Validating code generator functionality..."
+          ls -la fakegen/
+          test -d fakegen/programming-code || (echo "❌ Programming code directory not found" && exit 1)
+          test -f fakegen/programming-code/hello_1.js || (echo "❌ JavaScript code file not found" && exit 1)
+          test -f fakegen/programming-code/hello_1.py || (echo "❌ Python code file not found" && exit 1)
+          test -f fakegen/programming-code/hello_1.java || (echo "❌ Java code file not found" && exit 1)
+          echo "✅ Code generator working properly"
+          
+      - name: Validate generated file structure
+        run: |
+          echo "📁 Validating directory structure..."
+          test -d fakegen/data || (echo "❌ Data directory not found" && exit 1)
+          test -d fakegen/images || (echo "❌ Images directory not found" && exit 1)
+          test -d fakegen/favicon || (echo "❌ Favicon directory not found" && exit 1)
+          test -d fakegen/audio || (echo "❌ Audio directory not found" && exit 1)
+          test -d fakegen/video || (echo "❌ Video directory not found" && exit 1)
+          echo "✅ Directory structure validation passed"
+          
+      - name: Check file content is not empty
+        run: |
+          echo "📝 Validating file content..."
+          test -s fakegen/programming-code/hello_1.js || (echo "❌ JavaScript file is empty" && exit 1)
+          test -s fakegen/programming-code/hello_1.py || (echo "❌ Python file is empty" && exit 1)
+          echo "✅ File content validation passed"
+          
+      - name: Verify proper file extensions
+        run: |
+          echo "🔧 Validating file extensions..."
+          ls fakegen/programming-code/ | grep -E '\.(js|py|java|go|rs|php|rb|cpp|c|cs|swift|kt|dart)$' > /dev/null || (echo "❌ Expected file extensions not found" && exit 1)
+          echo "✅ File extensions validation passed"
+          
+      - name: Run extended tests
+        if: ${{ github.event.inputs.test_coverage == 'true' }}
+        run: |
+          echo "🧪 Running extended tests..."
+          # Check that we have multiple files for each language
+          js_count=$(ls fakegen/programming-code/*.js | wc -l)
+          py_count=$(ls fakegen/programming-code/*.py | wc -l)
+          if [ "$js_count" -lt 5 ]; then
+            echo "❌ Expected at least 5 JavaScript files, found $js_count"
+            exit 1
+          fi
+          if [ "$py_count" -lt 5 ]; then
+            echo "❌ Expected at least 5 Python files, found $py_count"
+            exit 1
+          fi
+          echo "✅ Extended tests passed"
+          
+      - name: Clean test artifacts
+        run: |
+          echo "🧹 Cleaning test artifacts..."
+          rm -rf fakegen/
+          
+      - name: Update package version
+        run: |
+          echo "📦 Updating package version to ${{ github.event.inputs.version }}"
+          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          
+      - name: Build package for validation
+        run: |
+          echo "🏗️ Validating package structure..."
+          npm pack --dry-run
+          
+      - name: Publish to NPM
+        if: ${{ github.event.inputs.publish == 'true' }}
+        run: |
+          echo "🚀 Publishing to NPM..."
+          npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          
+      - name: Create Git tag
+        if: ${{ github.event.inputs.publish == 'true' }}
+        run: |
+          echo "🏷️ Creating Git tag..."
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add package.json
+          git commit -m "chore: bump version to v${{ github.event.inputs.version }}"
+          git tag v${{ github.event.inputs.version }}
+          git push origin v${{ github.event.inputs.version }}
+          git push origin main
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Create GitHub release
+        if: ${{ github.event.inputs.publish == 'true' }}
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.event.inputs.version }}
+          release_name: Release v${{ github.event.inputs.version }}
+          body: |
+            ## Changes in v${{ github.event.inputs.version }}
+            
+            ### 🐛 Bug Fixes
+            - Fixed code generator configuration key mismatch issue
+            - Code generation now works properly with kebab-case configuration
+            
+            ### 🚀 Features
+            - Automated GitHub Actions release workflow
+            - Comprehensive testing validation
+            - Manual release process with version control
+            
+            ### 📦 Installation
+            ```bash
+            npm install -g fakegen@${{ github.event.inputs.version }}
+            ```
+            
+            ### 🧪 Testing
+            The package has been tested with:
+            - ✅ Code generator functionality
+            - ✅ File structure validation  
+            - ✅ Content validation
+            - ✅ Multiple format support
+            
+            Generated using automated release workflow.
+          draft: false
+          prerelease: false
+          
+      - name: Summary
+        run: |
+          echo "## 🎉 Release Summary" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: v${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Published to NPM**: ${{ github.event.inputs.publish }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Extended Tests**: ${{ github.event.inputs.test_coverage }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Code generator functionality verified" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ File structure validation passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Content validation passed" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ File extensions validation passed" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ github.event.inputs.test_coverage }}" == "true" ]; then
+            echo "- ✅ Extended tests passed" >> $GITHUB_STEP_SUMMARY
+          fi

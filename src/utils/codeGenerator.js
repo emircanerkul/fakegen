@@ -155,7 +155,22 @@ console.log("${message}");`;
  * @returns {Promise<void>}
  */
 async function generateProgrammingCodes(config, outputDir) {
-  if (!config.programmingCodes || !config.programmingCodes.enabled) {
+  // Support both kebab-case and camelCase configuration keys
+  const programmingConfig = config['programming-codes'] || config.programmingCodes;
+  
+  if (!programmingConfig || !programmingConfig.enabled) {
+    console.log('Programming codes generation is disabled');
+    return;
+  }
+
+  // Validate configuration
+  if (!programmingConfig.languages || !Array.isArray(programmingConfig.languages)) {
+    console.warn('No programming languages configured, skipping code generation');
+    return;
+  }
+
+  if (programmingConfig.languages.length === 0) {
+    console.warn('Empty programming languages array, skipping code generation');
     return;
   }
 
@@ -163,17 +178,21 @@ async function generateProgrammingCodes(config, outputDir) {
   const codeDir = path.join(outputDir, 'programming-code');
   await fs.ensureDir(codeDir);
 
-  const count = config.programmingCodes.count || 5;
+  const count = programmingConfig.count || 5;
 
-  for (const language of config.programmingCodes.languages) {
-    for (let i = 0; i < count; i++) {
-      const code = generateCodeExample(language);
-      const filename = `hello_${i + 1}`;
-      const extension = getFileExtension(language);
-      const filepath = path.join(codeDir, `${filename}.${extension}`);
+  for (const language of programmingConfig.languages) {
+    try {
+      for (let i = 0; i < count; i++) {
+        const code = generateCodeExample(language);
+        const filename = `hello_${i + 1}`;
+        const extension = getFileExtension(language);
+        const filepath = path.join(codeDir, `${filename}.${extension}`);
 
-      await fs.writeFile(filepath, code);
-      console.log(`Generated ${language.toUpperCase()} code: ${filepath}`);
+        await fs.writeFile(filepath, code);
+        console.log(`Generated ${language.toUpperCase()} code: ${filepath}`);
+      }
+    } catch (error) {
+      console.error(`Error generating ${language} code:`, error.message);
     }
   }
 
@@ -209,8 +228,31 @@ function getFileExtension(language) {
   return extensions[language.toLowerCase()] || 'txt';
 }
 
+/**
+ * Validate programming configuration
+ * @param {Object} config - Programming configuration object
+ * @throws {Error} If configuration is invalid
+ */
+function validateProgrammingConfig(config) {
+  const required = ['enabled', 'languages', 'count'];
+  const missing = required.filter(key => !(key in config));
+  
+  if (missing.length > 0) {
+    throw new Error(`Programming config missing required fields: ${missing.join(', ')}`);
+  }
+  
+  if (!Array.isArray(config.languages)) {
+    throw new Error('Programming config languages must be an array');
+  }
+  
+  if (typeof config.count !== 'number' || config.count < 1) {
+    throw new Error('Programming config count must be a positive number');
+  }
+}
+
 module.exports = {
   generateCodeExample,
   generateProgrammingCodes,
-  getFileExtension
+  getFileExtension,
+  validateProgrammingConfig
 };
