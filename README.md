@@ -4,7 +4,7 @@ A powerful CLI tool to generate comprehensive fake data and beautiful abstract i
 
 ### Quick Start
 
-```npx @emircanerkul/fakegen``` or [See the artifacts of the Github Actions to Download](https://github.com/emircanerkul/fakegen/actions/runs/17174640006)
+```npx @emircanerkul/fakegen``` or [Download sample archives from GitHub Releases](https://github.com/emircanerkul/fakegen/releases)
 
 > **DISCLAIMER:** This project developed with roocode/sonic to solve our annoying problem and demonstrate how well AI models do with good prompting. All prompt history also included, %100 transparent and honest.
 > 1. [Initial promt](history/roo_task_aug-22-2025_7-48-26-am.md)
