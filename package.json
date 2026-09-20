@@ -6,6 +6,12 @@
   "bin": {
     "fakegen": "bin/fakegen.js"
   },
+  "files": [
+    "bin",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
   "exports": {
     "./config": "./src/config/index.js",
     "./data": "./src/data/index.js",

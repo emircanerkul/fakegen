@@ -103,9 +103,11 @@ jobs:
           rm -rf fakegen/
           
       - name: Update package version
+        env:
+          VERSION: ${{ github.event.inputs.version }}
         run: |
-          echo "📦 Updating package version to ${{ github.event.inputs.version }}"
-          npm version ${{ github.event.inputs.version }} --no-git-tag-version
+          echo "📦 Updating package version to ${VERSION}"
+          npm version "${VERSION}" --no-git-tag-version
           
       - name: Build package for validation
         run: |
@@ -212,17 +214,18 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Create Git tag
         if: ${{ github.event.inputs.publish == 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ github.event.inputs.version }}
         run: |
           echo "🏷️ Creating Git tag..."
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add package.json package-lock.json
-          git commit -m "chore: bump version to v${{ github.event.inputs.version }}"
-          git tag v${{ github.event.inputs.version }}
-          git push origin v${{ github.event.inputs.version }}
+          git commit -m "chore: bump version to v${VERSION}"
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"
           git push origin HEAD:master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Build npm package tarball
         if: ${{ github.event.inputs.publish == 'true' }}
@@ -289,11 +292,15 @@ jobs:
           prerelease: false
           
       - name: Summary
+        env:
+          VERSION: ${{ github.event.inputs.version }}
+          PUBLISH: ${{ github.event.inputs.publish }}
+          TEST_COVERAGE: ${{ github.event.inputs.test_coverage }}
         run: |
           echo "## 🎉 Release Summary" >> $GITHUB_STEP_SUMMARY
-          echo "- **Version**: v${{ github.event.inputs.version }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Published to NPM**: ${{ github.event.inputs.publish }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Extended Tests**: ${{ github.event.inputs.test_coverage }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Published to NPM**: ${PUBLISH}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Extended Tests**: ${TEST_COVERAGE}" >> $GITHUB_STEP_SUMMARY
           echo "- **Status**: ✅ Success" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Release Assets" >> $GITHUB_STEP_SUMMARY
@@ -304,6 +311,6 @@ jobs:
           echo "- ✅ File structure validation passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ Content validation passed" >> $GITHUB_STEP_SUMMARY
           echo "- ✅ File extensions validation passed" >> $GITHUB_STEP_SUMMARY
-          if [ "${{ github.event.inputs.test_coverage }}" == "true" ]; then
+          if [ "${TEST_COVERAGE}" == "true" ]; then
             echo "- ✅ Extended tests passed" >> $GITHUB_STEP_SUMMARY
           fi

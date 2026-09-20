@@ -62,10 +62,12 @@ jobs:
         
       - name: Generate timestamp and archive name
         id: metadata
+        env:
+          ARCHIVE_INPUT: ${{ github.event.inputs.archive_name }}
         run: |
           TIMESTAMP=$(date -u +"%Y%m%d-%H%M%S")
-          if [ "${{ github.event.inputs.archive_name }}" != "" ]; then
-            ARCHIVE_NAME="${{ github.event.inputs.archive_name }}-${TIMESTAMP}"
+          if [ "${ARCHIVE_INPUT}" != "" ]; then
+            ARCHIVE_NAME="${ARCHIVE_INPUT}-${TIMESTAMP}"
           else
             ARCHIVE_NAME="fakegen-samples-${TIMESTAMP}"
           fi
@@ -238,10 +240,16 @@ jobs:
           
       - name: Create ZIP archive
         if: ${{ github.event.inputs.archive_format == 'zip' || github.event.inputs.archive_format == 'both' || github.event.inputs.archive_format == '' }}
+        env:
+          COMPRESSION_LEVEL: ${{ github.event.inputs.compression_level || '6' }}
         run: |
           echo "📦 Creating ZIP archive..."
-          COMPRESSION_LEVEL="${{ github.event.inputs.compression_level || '6' }}"
-          zip -r -$COMPRESSION_LEVEL "${{ steps.metadata.outputs.archive_name }}.zip" fakegen/
+          # Validate compression level (choice input, but never trust raw input in shell)
+          case "${COMPRESSION_LEVEL}" in
+            [1-9]) ;;
+            *) echo "❌ Invalid compression level: ${COMPRESSION_LEVEL}"; exit 1 ;;
+          esac
+          zip -r -"${COMPRESSION_LEVEL}" "${{ steps.metadata.outputs.archive_name }}.zip" fakegen/
           
           # Get archive info
           ZIP_SIZE=$(du -sh "${{ steps.metadata.outputs.archive_name }}.zip" | cut -f1)
@@ -324,14 +332,18 @@ jobs:
           prerelease: ${{ steps.flags.outputs.prerelease == 'true' }}
           
       - name: Summary
+        env:
+          ARCHIVE_FORMAT: ${{ github.event.inputs.archive_format || 'zip' }}
+          COMPRESSION_LEVEL: ${{ github.event.inputs.compression_level || '6' }}
+          INCLUDE_METADATA: ${{ github.event.inputs.include_metadata }}
         run: |
           echo "## 🎉 Archive Generation Complete!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📦 Generated Archives" >> $GITHUB_STEP_SUMMARY
           echo "- **Archive Name**: ${{ steps.metadata.outputs.archive_name }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Format**: ${{ github.event.inputs.archive_format || 'zip' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Compression Level**: ${{ github.event.inputs.compression_level || '6' }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **Include Metadata**: ${{ github.event.inputs.include_metadata != 'false' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Format**: ${ARCHIVE_FORMAT}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Compression Level**: ${COMPRESSION_LEVEL}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Include Metadata**: ${INCLUDE_METADATA}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 📊 Content Statistics" >> $GITHUB_STEP_SUMMARY
           echo "- **Total Files**: ${{ steps.stats.outputs.total_files }}" >> $GITHUB_STEP_SUMMARY
