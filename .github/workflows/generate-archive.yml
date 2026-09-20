@@ -36,7 +36,7 @@ on:
     # Run daily at 2 AM UTC to create fresh samples
     - cron: '0 2 * * *'
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
       - 'src/**'
       - 'bin/**'
@@ -45,6 +45,8 @@ on:
 jobs:
   generate-archive:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     
     steps:
       - name: Checkout code
@@ -271,39 +273,21 @@ jobs:
             echo "   Contents: $(tar -tzf "${{ steps.metadata.outputs.archive_name }}.tar.gz" | wc -l) files"
           fi
           
-      - name: Upload ZIP archive as artifact
-        if: ${{ github.event.inputs.archive_format == 'zip' || github.event.inputs.archive_format == 'both' || github.event.inputs.archive_format == '' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.metadata.outputs.archive_name }}-zip
-          path: ${{ steps.metadata.outputs.archive_name }}.zip
-          retention-days: 30
-          compression-level: 0  # Already compressed
-          
-      - name: Upload TAR.GZ archive as artifact
-        if: ${{ github.event.inputs.archive_format == 'tar.gz' || github.event.inputs.archive_format == 'both' }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.metadata.outputs.archive_name }}-targz
-          path: ${{ steps.metadata.outputs.archive_name }}.tar.gz
-          retention-days: 30
-          compression-level: 0  # Already compressed
-          
-      - name: Upload raw fakegen directory as artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ steps.metadata.outputs.archive_name }}-raw
-          path: fakegen/
-          retention-days: 7
-          
-      - name: Create release (on main branch push)
-        if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Determine release flags
+        id: flags
+        run: |
+          # Scheduled (nightly) runs are published as prereleases to reduce noise
+          if [ "${{ github.event_name }}" == "schedule" ]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub release with archives attached
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: archive-${{ steps.metadata.outputs.timestamp }}
-          release_name: FakeGen Archive ${{ steps.metadata.outputs.timestamp }}
+          name: FakeGen Archive ${{ steps.metadata.outputs.timestamp }}
           body: |
             # FakeGen Sample Archive ${{ steps.metadata.outputs.timestamp }}
             
@@ -320,9 +304,8 @@ jobs:
             - **Total Size**: ${{ steps.stats.outputs.total_size }}
             
             ## 📦 Downloads
-            - Download the artifacts from this workflow run
-            - ZIP and TAR.GZ formats available
-            - Raw directory structure also available
+            - ZIP and TAR.GZ archives are attached to this release
+            - Release assets are kept permanently (they do NOT expire like workflow artifacts)
             
             ## 🚀 Generated Content
             - **Data**: Multiple formats (JSON, CSV, XML, YAML, TOML, TXT)
@@ -333,8 +316,12 @@ jobs:
             - **Video**: Various formats and animations
             
             Generated automatically by FakeGen v$(node -p "require('./package.json').version")
+          files: |
+            ${{ steps.metadata.outputs.archive_name }}.zip
+            ${{ steps.metadata.outputs.archive_name }}.tar.gz
+          fail_on_unmatched_files: false
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.flags.outputs.prerelease == 'true' }}
           
       - name: Summary
         run: |
@@ -357,5 +344,5 @@ jobs:
           echo "- **Total Size**: ${{ steps.stats.outputs.total_size }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 💾 Download Links" >> $GITHUB_STEP_SUMMARY
-          echo "Archives are available as artifacts in this workflow run." >> $GITHUB_STEP_SUMMARY
-          echo "Artifacts are retained for 30 days (archives) and 7 days (raw directory)." >> $GITHUB_STEP_SUMMARY
+          echo "Archives are attached to the GitHub release **archive-${{ steps.metadata.outputs.timestamp }}**." >> $GITHUB_STEP_SUMMARY
+          echo "Release assets are kept permanently — they do not expire like workflow artifacts." >> $GITHUB_STEP_SUMMARY
